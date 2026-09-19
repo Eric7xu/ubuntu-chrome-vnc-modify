@@ -1,0 +1,29 @@
+services:
+  browser:
+    build:
+      context: .
+      args:
+        CHROME_ARCH: ${CHROME_ARCH:-auto}
+    image: ubuntu-chrome-vnc-modify:latest
+    container_name: ubuntu-chrome-vnc
+    ports:
+      # Keep all control surfaces on the host loopback. Use SSH tunnelling or a VPN.
+      - "127.0.0.1:18080:6901"
+      - "127.0.0.1:5902:5901"
+      - "127.0.0.1:9223:9223"
+    volumes:
+      - chrome_profile:/home/browser/chrome-profile
+    shm_size: "2gb"
+    environment:
+      RESOLUTION: ${RESOLUTION:-1920x1080x24}
+      VNC_PASSWORD: ${VNC_PASSWORD:?Set VNC_PASSWORD in .env before starting}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9223/json/version >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+
+volumes:
+  chrome_profile:
